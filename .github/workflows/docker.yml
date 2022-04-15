@@ -48,3 +48,13 @@ jobs:
             ${{ env.DOCKERHUB_REPO }}:latest
             ${{ env.DOCKERHUB_REPO }}:${{ env.APP_VERSION }}
 
+      - name: Build Cloud Image
+        uses: docker/build-push-action@v2
+        with:
+          builder: ${{ steps.buildx.outputs.name }}
+          context: .
+          file: ./Dockerfile.cloud
+          platforms: linux/amd64, linux/arm64
+          push: true
+          tags: |
+            ${{ env.DOCKERHUB_REPO }}:cloud

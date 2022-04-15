@@ -10,10 +10,6 @@ RUN cargo build --release --bin stat_server
 RUN strip /app/target/release/stat_server
 
 FROM alpine:3.15 as production
-LABEL version="1.0.0" \
-    description="A simple server monitoring tool" \
-    by="Doge" \
-    maintainer="doge.py@gmail.com"
 
 RUN apk add --no-cache libgcc
 COPY --from=builder /app/target/release/stat_server /stat_server
