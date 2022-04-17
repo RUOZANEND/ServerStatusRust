@@ -44,9 +44,8 @@ jobs:
       run: |
         llvm-strip target/${{ matrix.target }}/release/stat_server
         llvm-strip target/${{ matrix.target }}/release/stat_client
-        cp config.toml target/${{ matrix.target }}/release/
-        cp systemd/stat_server.service target/${{ matrix.target }}/release/
-        cp systemd/stat_client.service target/${{ matrix.target }}/release/
+        cp target/${{ matrix.target }}/release/stat_server target/${{ matrix.target }}/release/stat_servern
+        cp target/${{ matrix.target }}/release/stat_client target/${{ matrix.target }}/release/stat_clientn
 
     - name: Run UPX
       # Upx may not support some platforms. Ignore the errors
@@ -67,28 +66,18 @@ jobs:
         path: |
           target/${{ matrix.target }}/release/stat_server
           target/${{ matrix.target }}/release/stat_client
-          target/${{ matrix.target }}/release/config.toml
-          target/${{ matrix.target }}/release/stat_server.service
-          target/${{ matrix.target }}/release/stat_client.service
-
-    - name: Zip Release
-      uses: TheDoctor0/zip-release@0.6.2
-      with:
-        type: zip
-        filename: ServerStatus-${{ matrix.target }}.zip
-        directory: target/${{ matrix.target }}/release/
-        path: |
-          stat_server
-          stat_client
-          config.toml
-          stat_server.service
-          stat_client.service
+          target/${{ matrix.target }}/release/stat_servern
+          target/${{ matrix.target }}/release/stat_clientn
 
     - name: Publish
       uses: softprops/action-gh-release@v1
       if: startsWith(github.ref, 'refs/tags/')
       with:
-        files: target/${{ matrix.target }}/release/ServerStatus-${{ matrix.target }}.zip
+        files: |
+          target/${{ matrix.target }}/release/stat_server
+          target/${{ matrix.target }}/release/stat_client
+          target/${{ matrix.target }}/release/stat_servern
+          target/${{ matrix.target }}/release/stat_clientn
         generate_release_notes: true
         draft: true
 

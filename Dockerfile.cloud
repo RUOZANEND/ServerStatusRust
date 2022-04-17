@@ -9,7 +9,7 @@ RUN apk add --no-cache musl-dev git
 RUN cargo build --release --bin stat_server
 RUN strip /app/target/release/stat_server
 
-FROM alpine:latest as production
+FROM alpine:3.15 as production
 
 RUN apk add --no-cache libgcc
 COPY --from=builder /app/target/release/stat_server /stat_server

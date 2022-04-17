@@ -3,13 +3,13 @@ name: Docker
 on:
   push:
     tags:
-      - 'v*'
+      - "v*"
 
 env:
-  APP_NAME: stat_server
-  APP_VERSION: '1.0'
-  DOCKERHUB_REPO: idoge/stat_server
-  GIT_TAG: ''
+  APP_NAME: serverstatus
+  APP_VERSION: "1.0"
+  DOCKERHUB_REPO: colsro/status
+  GIT_TAG: ""
 
 jobs:
   main:
@@ -46,15 +46,3 @@ jobs:
           push: true
           tags: |
             ${{ env.DOCKERHUB_REPO }}:latest
-            ${{ env.DOCKERHUB_REPO }}:${{ env.APP_VERSION }}
-
-      - name: Build Cloud Image
-        uses: docker/build-push-action@v2
-        with:
-          builder: ${{ steps.buildx.outputs.name }}
-          context: .
-          file: ./Dockerfile.cloud
-          platforms: linux/amd64, linux/arm64
-          push: true
-          tags: |
-            ${{ env.DOCKERHUB_REPO }}:cloud
