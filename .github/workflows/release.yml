@@ -44,8 +44,9 @@ jobs:
       run: |
         llvm-strip target/${{ matrix.target }}/release/stat_server
         llvm-strip target/${{ matrix.target }}/release/stat_client
-        mv target/${{ matrix.target }}/release/stat_server target/${{ matrix.target }}/release/stat_server${{ matrix.target }}
-        mv target/${{ matrix.target }}/release/stat_client target/${{ matrix.target }}/release/stat_client${{ matrix.target }}
+        if [ "$(uname -m)" = "x86_64" ]; then ARCH=amd64; else ARCH=arm64; fi
+        mv target/${{ matrix.target }}/release/stat_server target/${{ matrix.target }}/release/stat_server_${ARCH}
+        mv target/${{ matrix.target }}/release/stat_client target/${{ matrix.target }}/release/stat_client_${ARCH}
 
     - name: Run UPX
       # Upx may not support some platforms. Ignore the errors
@@ -56,24 +57,24 @@ jobs:
       with:
         version: latest
         files: |
-          target/${{ matrix.target }}/release/stat_server${{ matrix.target }}
-          target/${{ matrix.target }}/release/stat_client${{ matrix.target }}
+          target/${{ matrix.target }}/release/stat_server_${ARCH}
+          target/${{ matrix.target }}/release/stat_client_${ARCH}
         args: -q --best --lzma
 
     - uses: actions/upload-artifact@v3
       with:
-        name: ServerStatus-${{ matrix.target }}
+        name: ServerStatus-${ARCH}
         path: |
-          target/${{ matrix.target }}/release/stat_server${{ matrix.target }}
-          target/${{ matrix.target }}/release/stat_client${{ matrix.target }}
+          target/${{ matrix.target }}/release/stat_server_${ARCH}
+          target/${{ matrix.target }}/release/stat_client_${ARCH}
 
     - name: Publish
       uses: softprops/action-gh-release@v1
       if: startsWith(github.ref, 'refs/tags/')
       with:
         files: |
-          target/${{ matrix.target }}/release/stat_server${{ matrix.target }}
-          target/${{ matrix.target }}/release/stat_client${{ matrix.target }}
+          target/${{ matrix.target }}/release/stat_server_${ARCH}
+          target/${{ matrix.target }}/release/stat_client_${ARCH}
         generate_release_notes: true
         draft: true
 
