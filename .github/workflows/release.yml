@@ -44,8 +44,8 @@ jobs:
       run: |
         llvm-strip target/${{ matrix.target }}/release/stat_server
         llvm-strip target/${{ matrix.target }}/release/stat_client
-        cp target/${{ matrix.target }}/release/stat_server target/${{ matrix.target }}/release/stat_servern
-        cp target/${{ matrix.target }}/release/stat_client target/${{ matrix.target }}/release/stat_clientn
+        mv target/${{ matrix.target }}/release/stat_server target/${{ matrix.target }}/release/stat_server${{ matrix.target }}
+        mv target/${{ matrix.target }}/release/stat_client target/${{ matrix.target }}/release/stat_client${{ matrix.target }}
 
     - name: Run UPX
       # Upx may not support some platforms. Ignore the errors
@@ -56,28 +56,24 @@ jobs:
       with:
         version: latest
         files: |
-          target/${{ matrix.target }}/release/stat_server
-          target/${{ matrix.target }}/release/stat_client
+          target/${{ matrix.target }}/release/stat_server${{ matrix.target }}
+          target/${{ matrix.target }}/release/stat_client${{ matrix.target }}
         args: -q --best --lzma
 
     - uses: actions/upload-artifact@v3
       with:
         name: ServerStatus-${{ matrix.target }}
         path: |
-          target/${{ matrix.target }}/release/stat_server
-          target/${{ matrix.target }}/release/stat_client
-          target/${{ matrix.target }}/release/stat_servern
-          target/${{ matrix.target }}/release/stat_clientn
+          target/${{ matrix.target }}/release/stat_server${{ matrix.target }}
+          target/${{ matrix.target }}/release/stat_client${{ matrix.target }}
 
     - name: Publish
       uses: softprops/action-gh-release@v1
       if: startsWith(github.ref, 'refs/tags/')
       with:
         files: |
-          target/${{ matrix.target }}/release/stat_server
-          target/${{ matrix.target }}/release/stat_client
-          target/${{ matrix.target }}/release/stat_servern
-          target/${{ matrix.target }}/release/stat_clientn
+          target/${{ matrix.target }}/release/stat_server${{ matrix.target }}
+          target/${{ matrix.target }}/release/stat_client${{ matrix.target }}
         generate_release_notes: true
         draft: true
 
