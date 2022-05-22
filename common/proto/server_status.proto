@@ -42,30 +42,17 @@ message StatRequest {
   uint64 latest_ts = 3;
   string frame = 4;
   // string location = 5;
-  bool vnstat = 6;
+  // string region = 6;
+  bool vnstat = 7;
 
-  bool online4 = 7;
-  bool online6 = 8;
+  bool online4 = 8;
+  bool online6 = 9;
 
-  uint64 uptime = 9;
+  uint64 uptime = 10;
   // load
-  double load_1 = 10;
-  double load_5 = 11;
-  double load_15 = 12;
-
-  //
-  double ping_10010 = 13;
-  double ping_189 = 14;
-  double ping_10086 = 15;
-  double time_10010 = 16;
-  double time_189 = 17;
-  double time_10086 = 18;
-
-  // t/u/p/d
-  uint32 tcp = 19;
-  uint32 udp = 20;
-  uint32 process = 21;
-  uint32 thread = 22;
+  double load_1 = 11;
+  double load_5 = 12;
+  double load_15 = 13;
 
   // netowrk
   uint64 network_rx = 23;

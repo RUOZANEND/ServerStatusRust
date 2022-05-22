@@ -100,6 +100,7 @@ impl StatsMgr {
                     let mut stat_c = stat;
                     let mut stat_t = stat_c.to_mut();
                     stat_t.location = info.location.to_string();
+                    stat_t.region = info.region.to_string();
                     stat_t.host_type = info.host_type.to_owned();
                     stat_t.pos = info.pos;
                     stat_t.alias = info.alias.to_owned();

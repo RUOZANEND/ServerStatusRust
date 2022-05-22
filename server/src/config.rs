@@ -25,6 +25,7 @@ pub struct Host {
     #[serde(default = "Default::default")]
     pub alias: String,
     pub location: String,
+    pub region: String,
     #[serde(rename = "type")]
     pub host_type: String,
     #[serde(default = "u32::default")]

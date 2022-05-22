@@ -24,9 +24,6 @@ mod status;
 mod sys_info;
 
 const INTERVAL_MS: u64 = 1000;
-static CU: &str = "cu.tz.cloudcpp.com:80";
-static CT: &str = "ct.tz.cloudcpp.com:80";
-static CM: &str = "cm.tz.cloudcpp.com:80";
 
 #[derive(Default)]
 pub struct ClientConfig {
@@ -47,21 +44,11 @@ pub struct Args {
     pass: String,
     #[clap(short = 'n', long, help = "enable vnstat, default:false")]
     vnstat: bool,
-    #[clap(long = "disable-tupd", help = "disable t/u/p/d, default:false")]
-    disable_tupd: bool,
-    #[clap(long = "disable-ping", help = "disable ping, default:false")]
-    disable_ping: bool,
     #[clap(
         long = "disable-extra",
         help = "disable extra info report, default:false"
     )]
     disable_extra: bool,
-    #[clap(long = "ct", default_value = CT, help = "China Telecom probe addr")]
-    ct_addr: String,
-    #[clap(long = "cm", default_value = CM, help = "China Mobile probe addr")]
-    cm_addr: String,
-    #[clap(long = "cu", default_value = CU, help = "China Unicom probe addr")]
-    cu_addr: String,
     #[clap(long = "ip-info", help = "show ip info, default:false")]
     ip_info: bool,
     #[clap(long = "json", help = "use json protocol, default:false")]
@@ -234,7 +221,7 @@ async fn main() -> Result<()> {
         sys_info::start_net_speed_collect_t();
     }
 
-    status::start_all_ping_collect_t(&args);
+    // status::start_all_ping_collect_t(&args);
     let (ipv4, ipv6) = status::get_network();
     eprintln!("get_network (ipv4, ipv6) => ({}, {})", ipv4, ipv6);
 

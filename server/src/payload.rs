@@ -16,6 +16,8 @@ pub struct HostStat {
     pub host_type: String,
     #[serde(skip_deserializing)]
     pub location: String,
+    #[serde(skip_deserializing)]
+    pub region: String,
     #[serde(default = "bool::default")]
     pub vnstat: bool,
 
@@ -32,22 +34,6 @@ pub struct HostStat {
     pub load_1: f64,
     pub load_5: f64,
     pub load_15: f64,
-
-    pub ping_10010: f64,
-    pub ping_189: f64,
-    pub ping_10086: f64,
-    pub time_10010: f64,
-    pub time_189: f64,
-    pub time_10086: f64,
-
-    #[serde(rename(deserialize = "tcp"))]
-    pub tcp_count: u32,
-    #[serde(rename(deserialize = "udp"))]
-    pub udp_count: u32,
-    #[serde(rename(deserialize = "process"))]
-    pub process_count: u32,
-    #[serde(rename(deserialize = "thread"))]
-    pub thread_count: u32,
 
     pub network_rx: u64,
     pub network_tx: u64,

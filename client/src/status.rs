@@ -1,15 +1,12 @@
 // #![allow(unused)]
 use chrono::{Datelike, Local};
 use lazy_static::lazy_static;
-use once_cell::sync::OnceCell;
 use regex::Regex;
 use std::collections::HashMap;
-use std::collections::LinkedList;
 use std::fs;
 use std::fs::File;
 use std::io::BufRead;
 use std::io::BufReader;
-use std::io::ErrorKind::ConnectionRefused;
 use std::net::TcpStream;
 use std::net::{Shutdown, ToSocketAddrs};
 use std::process::Command;
@@ -86,26 +83,6 @@ pub fn get_memory() -> (u64, u64, u64, u64) {
         - res_dict["SReclaimable"];
 
     (mem_total, mem_used, swap_total, swap_free)
-}
-
-macro_rules! exec_shell_cmd_fetch_u32 {
-    ($shell_cmd:expr) => {{
-        let a = &Command::new("/bin/sh")
-            .args(&["-c", $shell_cmd])
-            .output()
-            .expect("failed to execute process")
-            .stdout;
-        str::from_utf8(a).unwrap().trim().parse::<u32>().unwrap()
-    }};
-}
-
-pub fn tupd() -> (u32, u32, u32, u32) {
-    let t = exec_shell_cmd_fetch_u32!("ss -t | wc -l") - 1;
-    let u = exec_shell_cmd_fetch_u32!("ss -u | wc -l") - 1;
-    let p = exec_shell_cmd_fetch_u32!("ps -ef | wc -l") - 2;
-    let d = exec_shell_cmd_fetch_u32!("ps -eLf | wc -l") - 2;
-
-    (t, u, p, d)
 }
 
 static IFACE_IGNORE_VEC: &[&str] = &["lo", "docker", "vnet", "veth", "vmbr", "kube", "br-"];
@@ -314,101 +291,6 @@ pub fn get_network() -> (bool, bool) {
     (network[0], network[1])
 }
 
-#[derive(Debug, Default)]
-pub struct PingData {
-    pub probe_uri: String,
-    pub lost_rate: u32,
-    pub ping_time: u32,
-}
-
-fn start_ping_collect_t(data: &Arc<Mutex<PingData>>) {
-    let mut package_list: LinkedList<i32> = LinkedList::new();
-    let mut package_lost: u32 = 0;
-    let pt = &*data.lock().unwrap();
-    let addr = pt
-        .probe_uri
-        .to_socket_addrs()
-        .unwrap()
-        .next()
-        .expect("can't get addr info");
-    info!("{} => {:?}", pt.probe_uri, addr);
-
-    let ping_data = data.clone();
-    thread::spawn(move || loop {
-        if package_list.len() > 100 && package_list.pop_front().unwrap() == 0 {
-            package_lost -= 1;
-        }
-
-        let st = SystemTime::now()
-            .duration_since(UNIX_EPOCH)
-            .unwrap()
-            .as_millis();
-        match TcpStream::connect_timeout(&addr, Duration::from_millis(TIMEOUT_MS)) {
-            Ok(s) => {
-                let _ = s.shutdown(Shutdown::Both);
-                package_list.push_back(1);
-            }
-            Err(e) => {
-                // error!("{:?}", e);
-                if e.kind() == ConnectionRefused {
-                    package_list.push_back(1);
-                } else {
-                    package_lost += 1;
-                    package_list.push_back(0);
-                }
-            }
-        }
-        let et = SystemTime::now()
-            .duration_since(UNIX_EPOCH)
-            .unwrap()
-            .as_millis();
-        let time_cost_ms = et - st;
-
-        if let Ok(mut o) = ping_data.lock() {
-            o.ping_time = time_cost_ms as u32;
-            if package_list.len() > 30 {
-                o.lost_rate = package_lost * 100 / package_list.len() as u32;
-            }
-        }
-
-        thread::sleep(Duration::from_millis(SAMPLE_PERIOD));
-    });
-}
-
-pub static G_PING_10010: OnceCell<Arc<Mutex<PingData>>> = OnceCell::new();
-pub static G_PING_189: OnceCell<Arc<Mutex<PingData>>> = OnceCell::new();
-pub static G_PING_10086: OnceCell<Arc<Mutex<PingData>>> = OnceCell::new();
-
-pub fn start_all_ping_collect_t(args: &Args) {
-    G_PING_10010
-        .set(Arc::new(Mutex::new(PingData {
-            probe_uri: args.cu_addr.to_owned(),
-            lost_rate: 0,
-            ping_time: 0,
-        })))
-        .unwrap();
-    G_PING_189
-        .set(Arc::new(Mutex::new(PingData {
-            probe_uri: args.ct_addr.to_owned(),
-            lost_rate: 0,
-            ping_time: 0,
-        })))
-        .unwrap();
-    G_PING_10086
-        .set(Arc::new(Mutex::new(PingData {
-            probe_uri: args.cm_addr.to_owned(),
-            lost_rate: 0,
-            ping_time: 0,
-        })))
-        .unwrap();
-
-    if !args.disable_ping {
-        start_ping_collect_t(G_PING_10010.get().unwrap());
-        start_ping_collect_t(G_PING_189.get().unwrap());
-        start_ping_collect_t(G_PING_10086.get().unwrap());
-    }
-}
-
 pub fn sample(args: &Args, stat: &mut StatRequest) {
     stat.version = env!("CARGO_PKG_VERSION").to_string();
     stat.vnstat = args.vnstat;
@@ -430,16 +312,6 @@ pub fn sample(args: &Args, stat: &mut StatRequest) {
     stat.hdd_total = hdd_total;
     stat.hdd_used = hdd_used;
 
-    let (t, u, p, d) = if args.disable_tupd {
-        (0, 0, 0, 0)
-    } else {
-        tupd()
-    };
-    stat.tcp = t;
-    stat.udp = u;
-    stat.process = p;
-    stat.thread = d;
-
     if args.vnstat {
         let (network_in, network_out, m_network_in, m_network_out) = get_vnstat_traffic();
         stat.network_in = network_in;
@@ -460,19 +332,19 @@ pub fn sample(args: &Args, stat: &mut StatRequest) {
         stat.network_rx = o.netrx;
         stat.network_tx = o.nettx;
     }
-    {
-        let o = &*G_PING_10010.get().unwrap().lock().unwrap();
-        stat.ping_10010 = o.lost_rate.into();
-        stat.time_10010 = o.ping_time.into();
-    }
-    {
-        let o = &*G_PING_189.get().unwrap().lock().unwrap();
-        stat.ping_189 = o.lost_rate.into();
-        stat.time_189 = o.ping_time.into();
-    }
-    {
-        let o = &*G_PING_10086.get().unwrap().lock().unwrap();
-        stat.ping_10086 = o.lost_rate.into();
-        stat.time_10086 = o.ping_time.into();
-    }
+    // {
+    //     let o = &*G_PING_10010.get().unwrap().lock().unwrap();
+    //     stat.ping_10010 = o.lost_rate.into();
+    //     stat.time_10010 = o.ping_time.into();
+    // }
+    // {
+    //     let o = &*G_PING_189.get().unwrap().lock().unwrap();
+    //     stat.ping_189 = o.lost_rate.into();
+    //     stat.time_189 = o.ping_time.into();
+    // }
+    // {
+    //     let o = &*G_PING_10086.get().unwrap().lock().unwrap();
+    //     stat.ping_10086 = o.lost_rate.into();
+    //     stat.time_10086 = o.ping_time.into();
+    // }
 }

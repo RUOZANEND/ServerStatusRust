@@ -268,6 +268,7 @@ async fn get_detail(req: Request<Body>) -> Result<Response<Body>> {
                 host.name,
                 host.alias,
                 host.location,
+                host.region,
                 host.uptime_str,
                 "xx.xx.xx.xx".to_string(),
                 sys_info,
@@ -298,7 +299,7 @@ async fn main_service_func(req: Request<Body>) -> Result<Response<Body>> {
     let req_path = req.uri().path();
     match (req.method(), req_path) {
         (&Method::POST, "/report") => stats_report(req).await,
-        (&Method::GET, "/json/stats.json") => get_stats_json().await,
+        (&Method::GET, "/stats.json") => get_stats_json().await,
         (&Method::GET, "/detail") => get_detail(req).await,
         (&Method::GET, "/detail_ht") => render_jinja_ht_tpl("detail_ht", req).await,
         (&Method::GET, "/map") => render_jinja_ht_tpl("map", req).await,
@@ -312,7 +313,6 @@ async fn main_service_func(req: Request<Body>) -> Result<Response<Body>> {
             if req.method() == Method::GET
                 && (req_path.starts_with("/js/")
                     || req_path.starts_with("/css/")
-                    || req_path.starts_with("/img/")
                     || req_path.eq("/favicon.ico"))
             {
                 if let Some(data) = Asset::get(req_path) {

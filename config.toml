@@ -14,9 +14,9 @@ admin_pass = ""
 # monthstart = 1 没启用vnstat时，表示月流量从每月哪天开始统计
 # disabled = true 单机禁用，跟删除这条配置的效果一样
 hosts = [
-  {name = "h1", password = "p1", alias = "n1", location = "🏠", type = "kvm", notify = true},
-  {name = "h2", password = "p2", alias = "n2", location = "🏢", type = "kvm", disabled = false},
-  {name = "h3", password = "p3", alias = "n3", location = "🏝️", type = "kvm", monthstart = 1},
+  {name = "h1", password = "p1", alias = "n1", location = "Shanghai,China", region = "CN", type = "kvm", notify = true},
+  {name = "h2", password = "p2", alias = "n2", location = "Tokyo,Japan", region = "CN", type = "kvm", disabled = false},
+  {name = "h3", password = "p3", alias = "n3", location = "Hongkong,China", region = "CN", type = "kvm", monthstart = 1},
 ]
 
 

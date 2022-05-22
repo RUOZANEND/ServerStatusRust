@@ -128,19 +128,6 @@ pub fn sample(args: &Args, stat: &mut StatRequest) {
     stat.hdd_total = hdd_total / 1024 / 1024;
     stat.hdd_used = (hdd_total - hdd_avail) / 1024 / 1024;
 
-    // t/u/p/d TODO
-    let (t, u, p, d) = if args.disable_tupd {
-        (0, 0, 0, 0)
-    } else if "linux".eq(std::env::consts::OS) {
-        status::tupd()
-    } else {
-        (0, 0, 0, 0)
-    };
-    stat.tcp = t;
-    stat.udp = u;
-    stat.process = p;
-    stat.thread = d;
-
     // traffic
     if args.vnstat {
         let (network_in, network_out, m_network_in, m_network_out) = get_vnstat_traffic();
@@ -168,21 +155,6 @@ pub fn sample(args: &Args, stat: &mut StatRequest) {
     if let Ok(o) = G_NET_SPEED.lock() {
         stat.network_rx = o.net_rx;
         stat.network_tx = o.net_tx;
-    }
-    {
-        let o = &*status::G_PING_10010.get().unwrap().lock().unwrap();
-        stat.ping_10010 = o.lost_rate.into();
-        stat.time_10010 = o.ping_time.into();
-    }
-    {
-        let o = &*status::G_PING_189.get().unwrap().lock().unwrap();
-        stat.ping_189 = o.lost_rate.into();
-        stat.time_189 = o.ping_time.into();
-    }
-    {
-        let o = &*status::G_PING_10086.get().unwrap().lock().unwrap();
-        stat.ping_10086 = o.lost_rate.into();
-        stat.time_10086 = o.ping_time.into();
     }
 }
 
